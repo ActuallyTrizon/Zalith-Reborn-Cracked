@@ -1,54 +1,72 @@
 package com.movtery.zalithlauncher.setting
 
 /**
- * 静态设置项的值，用于一些临时生效的设置项使用
- * 这里的值不会被保存到设置配置中，软件重启就会消失！
+ * Holds temporary runtime-only setting values.
+ *
+ * These values are not persisted to the settings configuration,
+ * so they will be lost when the app restarts.
  */
 class AllStaticSettings {
     companion object {
-        /**
-         * 刘海屏缺口宽度 Int
-         */
-        @JvmField var notchSize = 0
 
         /**
-         * 缩放因子 Float
+         * Display cutout (notch) width.
          */
-        @JvmField var scaleFactor = AllSettings.resolutionRatio.getValue() / 100f
+        @JvmField
+        var notchSize: Int = 0
 
         /**
-         * 禁用双击交换手中物品 Boolean
+         * Resolution scale factor.
          */
-        @JvmField var disableDoubleTap = AllSettings.disableDoubleTap.getValue()
+        @JvmField
+        var scaleFactor: Float = AllSettings.resolutionRatio.getValue() / 100f
 
         /**
-         * 触发长按延迟 Int
+         * Whether double-tap item swapping is disabled.
          */
-        @JvmField var timeLongPressTrigger = AllSettings.timeLongPressTrigger.getValue()
+        @JvmField
+        var disableDoubleTap: Boolean = AllSettings.disableDoubleTap.getValue()
 
         /**
-         * 启用陀螺仪控制 Boolean
+         * Force GUI input for ImGui/Axiom.
          */
-        @JvmField var enableGyro = AllSettings.enableGyro.getValue()
+        @JvmField
+        var forceGuiInput: Boolean = AllSettings.forceGuiInput.getValue()
 
         /**
-         * 陀螺仪控制灵敏度 Int
+         * Long-press trigger delay.
          */
-        @JvmField var gyroSensitivity = AllSettings.gyroSensitivity.getValue()
+        @JvmField
+        var timeLongPressTrigger: Int = AllSettings.timeLongPressTrigger.getValue()
 
         /**
-         * 陀螺仪反转X轴 Boolean
+         * Whether gyro controls are enabled.
          */
-        @JvmField var gyroInvertX = AllSettings.gyroInvertX.getValue()
+        @JvmField
+        var enableGyro: Boolean = AllSettings.enableGyro.getValue()
 
         /**
-         * 陀螺仪反转Y轴 Boolean
+         * Gyro control sensitivity.
          */
-        @JvmField var gyroInvertY = AllSettings.gyroInvertY.getValue()
+        @JvmField
+        var gyroSensitivity: Int = AllSettings.gyroSensitivity.getValue()
 
         /**
-         * 使用控制代理 Boolean
+         * Whether the gyro X axis is inverted.
          */
-        @JvmField var useControllerProxy = false
+        @JvmField
+        var gyroInvertX: Boolean = AllSettings.gyroInvertX.getValue()
+
+        /**
+         * Whether the gyro Y axis is inverted.
+         */
+        @JvmField
+        var gyroInvertY: Boolean = AllSettings.gyroInvertY.getValue()
+
+        /**
+         * Whether to use the controller proxy.
+         */
+        @JvmField
+        var useControllerProxy: Boolean = false
     }
 }

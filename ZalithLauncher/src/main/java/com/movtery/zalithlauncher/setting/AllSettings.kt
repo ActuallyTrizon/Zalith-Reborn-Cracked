@@ -42,6 +42,9 @@ class AllSettings {
 
         @JvmStatic
         val zinkPreferSystemDriver = BooleanSettingUnit("zinkPreferSystemDriver", false)
+        //Imgui Axiom
+        @JvmStatic
+        val forceGuiInput = BooleanSettingUnit("forceGuiInput", false)
 
         // Control
         @JvmStatic

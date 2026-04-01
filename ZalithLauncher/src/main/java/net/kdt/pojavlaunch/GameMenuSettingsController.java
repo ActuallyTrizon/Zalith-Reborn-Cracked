@@ -129,7 +129,6 @@ public class GameMenuSettingsController implements
         binding.enableGyro.setChecked(AllSettings.getEnableGyro().getValue());
         binding.gyroInvertX.setChecked(AllSettings.getGyroInvertX().getValue());
         binding.gyroInvertY.setChecked(AllSettings.getGyroInvertY().getValue());
-
         binding.openMemoryInfo.setOnCheckedChangeListener(this);
         binding.openFpsInfo.setOnCheckedChangeListener(this);
         binding.disableGestures.setOnCheckedChangeListener(this);
@@ -137,6 +136,10 @@ public class GameMenuSettingsController implements
         binding.enableGyro.setOnCheckedChangeListener(this);
         binding.gyroInvertX.setOnCheckedChangeListener(this);
         binding.gyroInvertY.setOnCheckedChangeListener(this);
+        binding.forceGuiInput.setOnCheckedChangeListener(this);
+        binding.forceGuiInputLayout.setOnClickListener(this);
+
+
     }
 
     private void initClickListeners() {
@@ -165,6 +168,7 @@ public class GameMenuSettingsController implements
         binding.hotbarWidthAdd.setOnClickListener(this);
         binding.hotbarHeightRemove.setOnClickListener(this);
         binding.hotbarHeightAdd.setOnClickListener(this);
+
     }
 
     private void initHotbarSpinner() {
@@ -243,6 +247,9 @@ public class GameMenuSettingsController implements
             MenuUtils.adjustSeekbar(binding.resolutionScaler, 1);
         } else if (view == binding.disableGesturesLayout) {
             MenuUtils.toggleSwitchState(binding.disableGestures);
+        }else if (view == binding.forceGuiInputLayout) {
+            MenuUtils.toggleSwitchState(binding.forceGuiInput);
+
         } else if (view == binding.disableDoubleTapLayout) {
             MenuUtils.toggleSwitchState(binding.disableDoubleTap);
         } else if (view == binding.timeLongPressTriggerRemove) {
@@ -351,6 +358,11 @@ public class GameMenuSettingsController implements
         } else if (compoundButton == binding.disableGestures) {
             refreshLayoutVisible(binding.timeLongPressTriggerLayout, !isChecked);
             AllSettings.getDisableGestures().put(isChecked).save();
+        }else if (compoundButton == binding.forceGuiInput) {
+            AllSettings.getForceGuiInput().put(isChecked).save();
+            AllStaticSettings.forceGuiInput = isChecked;
+            activityBinding.mainGameRenderView.refreshTouchProcessor();
+
         } else if (compoundButton == binding.disableDoubleTap) {
             AllSettings.getDisableDoubleTap().put(isChecked).save();
             AllStaticSettings.disableDoubleTap = isChecked;

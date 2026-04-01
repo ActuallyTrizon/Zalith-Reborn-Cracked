@@ -460,6 +460,7 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
         }
     }
 
+
     public void toggleKeyboard(View view) {
         binding.awtTouchChar.switchKeyboardState();
     }

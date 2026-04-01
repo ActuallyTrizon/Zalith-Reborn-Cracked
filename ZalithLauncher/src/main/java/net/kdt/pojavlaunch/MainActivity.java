@@ -375,6 +375,7 @@ public class MainActivity extends BaseActivity implements
         if (AllStaticSettings.enableGyro) {
             gyroControl.enable();
         }
+        CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, 1);
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_HOVERED, 1);
     }
 
@@ -384,8 +385,14 @@ public class MainActivity extends BaseActivity implements
         if (CallbackBridge.isGrabbing()) {
             sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
         }
+        CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, 0);
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_HOVERED, 0);
         super.onPause();
+    }
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, hasFocus ? 1 : 0);
     }
 
     @Override

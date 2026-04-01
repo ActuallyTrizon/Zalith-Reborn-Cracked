@@ -31,6 +31,7 @@ class InstallArgsUtils(
         intent.putExtra("javaArgs", args)
         intent.putExtra(JavaGUILauncherActivity.SUBSCRIBE_JVM_EXIT_EVENT, true)
         intent.putExtra(JavaGUILauncherActivity.FORCE_SHOW_LOG, true)
+        intent.putExtra("disableSecurityManager", true)
     }
 
     @Deprecated(
