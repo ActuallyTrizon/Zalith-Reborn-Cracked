@@ -7,8 +7,6 @@ import com.movtery.zalithlauncher.feature.accounts.AccountUtils
 import com.movtery.zalithlauncher.feature.customprofilepath.ProfilePathHome
 import com.movtery.zalithlauncher.feature.customprofilepath.ProfilePathHome.Companion.getLibrariesHome
 import com.movtery.zalithlauncher.feature.version.Version
-import com.movtery.zalithlauncher.plugins.renderer.ApkRendererPlugin
-import com.movtery.zalithlauncher.plugins.renderer.RendererPluginManager
 import com.movtery.zalithlauncher.utils.ZHTools
 import com.movtery.zalithlauncher.utils.path.LibPath
 import com.movtery.zalithlauncher.utils.path.PathManager
@@ -32,8 +30,6 @@ class LaunchArgs(
     private val launchClassPath: String
 ) {
     companion object {
-        private const val MOBILE_GLUES_PACKAGE = "com.fcl.plugin.mobileglues"
-
         @JvmStatic
         fun getCacioJavaArgs(isJava8: Boolean): List<String> {
             val argsList: MutableList<String> = ArrayList()
@@ -83,8 +79,6 @@ class LaunchArgs(
     }
 
     fun getAllArgs(): List<String> {
-        enforceMobileGluesRequirement()
-
         val argsList: MutableList<String> = ArrayList()
         val lwjglComponent = Tools.resolveLWJGLComponentForLaunch(minecraftVersion, versionInfo)
 
@@ -102,52 +96,6 @@ class LaunchArgs(
         argsList.add(versionInfo.mainClass)
         argsList.addAll(getMinecraftClientArgs())
         return argsList
-    }
-
-    private fun enforceMobileGluesRequirement() {
-        if (!requiresMobileGlues(versionInfo)) {
-            return
-        }
-
-        if (!isMobileGluesInstalled()) {
-            throw IllegalStateException(
-                "Mobile Glues is required for Minecraft versions above 1.16.5, but it is not installed."
-            )
-        }
-
-        if (!isMobileGluesSelected()) {
-            throw IllegalStateException(
-                "Mobile Glues is required for Minecraft versions above 1.16.5, but it is not selected as the active renderer."
-            )
-        }
-    }
-
-    private fun isMobileGluesInstalled(): Boolean {
-        return try {
-            context.packageManager.getPackageInfo(MOBILE_GLUES_PACKAGE, 0)
-            true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    private fun isMobileGluesSelected(): Boolean {
-        val plugin = RendererPluginManager.selectedRendererPlugin as? ApkRendererPlugin
-        return plugin?.packageName == MOBILE_GLUES_PACKAGE
-    }
-
-    private fun requiresMobileGlues(version: JMinecraftVersionList.Version): Boolean {
-        val rawVersion = version.id?.trim().orEmpty()
-        val match = Regex("""^1\.(\d+)(?:\.(\d+))?$""").matchEntire(rawVersion) ?: return true
-
-        val minor = match.groupValues[1].toIntOrNull() ?: return true
-        val patch = match.groupValues.getOrNull(2)?.takeIf { it.isNotEmpty() }?.toIntOrNull() ?: 0
-
-        return when {
-            minor < 16 -> false
-            minor > 16 -> true
-            else -> patch > 5
-        }
     }
 
     private fun getJavaArgs(lwjglComponent: String): List<String> {

@@ -13,8 +13,7 @@ import com.movtery.zalithlauncher.feature.accounts.AccountUtils
 import com.movtery.zalithlauncher.feature.accounts.AccountsManager
 import com.movtery.zalithlauncher.feature.log.Logging
 import com.movtery.zalithlauncher.feature.version.Version
-import com.movtery.zalithlauncher.plugins.renderer.ApkRendererPlugin
-import com.movtery.zalithlauncher.plugins.renderer.RendererPluginManager
+import com.movtery.zalithlauncher.plugins.PluginLoader
 import com.movtery.zalithlauncher.renderer.Renderers
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.AllStaticSettings
@@ -44,8 +43,6 @@ import net.kdt.pojavlaunch.value.MinecraftAccount
 import org.greenrobot.eventbus.EventBus
 
 object LaunchGame {
-    private const val MOBILE_GLUES_PACKAGE = "com.fcl.plugin.mobileglues"
-
     @JvmStatic
     fun preLaunch(context: Context, version: Version) {
         val networkAvailable = NetworkUtils.isNetworkAvailable(context)
@@ -167,13 +164,9 @@ object LaunchGame {
         minecraftVersion: Version,
         version: JMinecraftVersionList.Version
     ) {
-        ensureRendererIsValid(activity)
-
-        if (!checkMobileGluesRequirementAndBlock(activity, version)) {
-            setGameProgress(false)
-            GameService.setActive(false)
-            return
-        }
+        PluginLoader.refreshAllPlugins(activity)
+        Renderers.reloadRenderers(activity, minecraftVersion.getRenderer(), false)
+        ensureRendererIsValid(activity, minecraftVersion)
 
         var account = AccountsManager.currentAccount!!
         if (minecraftVersion.offlineAccountLogin) {
@@ -229,84 +222,11 @@ object LaunchGame {
         GameService.setActive(false)
     }
 
-    private fun checkMobileGluesRequirementAndBlock(
-        activity: AppCompatActivity,
-        version: JMinecraftVersionList.Version
-    ): Boolean {
-        val requires = requiresMobileGlues(version)
-        Logger.appendToLog("Mobile Glues gate [LaunchGame]: version.id=${version.id} requires=$requires")
-
-        if (!requires) {
-            return true
-        }
-
-        val installed = isMobileGluesInstalled(activity)
-        val selected = isMobileGluesSelected()
-        Logger.appendToLog("Mobile Glues gate [LaunchGame]: installed=$installed selected=$selected")
-
-        if (installed && selected) {
-            return true
-        }
-
-        showMobileGluesBlockedDialog(activity, installed, selected)
-        return false
-    }
-
-    private fun showMobileGluesBlockedDialog(
-        activity: AppCompatActivity,
-        installed: Boolean,
-        selected: Boolean
-    ) {
-        val message = when {
-            !installed -> "Mobile Glues is required for Minecraft versions above 1.16.5. Install Mobile Glues before launching this version."
-            !selected -> "Mobile Glues is installed, but it is not selected as the active renderer. Select Mobile Glues in Renderer settings before launching."
-            else -> "Mobile Glues is required before launching this version."
-        }
-
-        TaskExecutors.runInUIThread {
-            TipDialog.Builder(activity)
-                .setTitle(R.string.generic_error)
-                .setMessage(message)
-                .setWarning()
-                .setCenterMessage(false)
-                .setCancelable(false)
-                .setShowCancel(false)
-                .setConfirmClickListener { }
-                .showDialog()
-        }
-    }
-
-    private fun requiresMobileGlues(version: JMinecraftVersionList.Version): Boolean {
-        val rawVersion = version.id?.trim().orEmpty()
-        val match = Regex("""^1\.(\d+)(?:\.(\d+))?$""").matchEntire(rawVersion) ?: return true
-
-        val minor = match.groupValues[1].toIntOrNull() ?: return true
-        val patch = match.groupValues.getOrNull(2)?.takeIf { it.isNotEmpty() }?.toIntOrNull() ?: 0
-
-        return when {
-            minor < 16 -> false
-            minor > 16 -> true
-            else -> patch > 5
-        }
-    }
-
-    private fun isMobileGluesInstalled(context: Context): Boolean {
-        return try {
-            context.packageManager.getPackageInfo(MOBILE_GLUES_PACKAGE, 0)
-            true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    private fun isMobileGluesSelected(): Boolean {
-        val plugin = RendererPluginManager.selectedRendererPlugin as? ApkRendererPlugin
-        return plugin?.packageName == MOBILE_GLUES_PACKAGE
-    }
-
-    private fun ensureRendererIsValid(activity: AppCompatActivity) {
+    private fun ensureRendererIsValid(activity: AppCompatActivity, minecraftVersion: Version) {
         if (!Renderers.isCurrentRendererValid()) {
-            Renderers.setCurrentRenderer(activity, AllSettings.renderer.getValue())
+            val rendererId = minecraftVersion.getRenderer().takeIf { it.isNotBlank() }
+                ?: AllSettings.renderer.getValue()
+            Renderers.setCurrentRenderer(activity, rendererId)
         }
     }
 
