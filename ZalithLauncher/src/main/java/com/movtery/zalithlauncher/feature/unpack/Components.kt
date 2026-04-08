@@ -11,6 +11,7 @@ enum class Components(val component: String, val displayName: String, val summar
     // through the classloader namespace without hitting the external-storage restriction.
     LWJGL3("lwjgl3", "LWJGL 3", R.string.splash_screen_lwjgl, true),
     LWJGL342("lwjgl3.4.2", "LWJGL 3.4.2", R.string.splash_screen_lwjgl, true),
+    LWJGL_VULKAN("lwjglVulkan", "LWJGL Vulkan", R.string.splash_screen_lwjgl, true),
 
     // Launcher support components (like MioLibPatcher.jar) are expected from DIR_DATA/components,
     // not from context.filesDir/components.

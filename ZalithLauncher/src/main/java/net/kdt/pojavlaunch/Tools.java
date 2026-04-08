@@ -94,6 +94,7 @@ public final class Tools {
     private static final String DEFAULT_LWJGL_COMPONENT = "lwjgl3";
     private static final String LWJGL_COMPONENT_OVERRIDE_PROPERTY = "pojav.lwjgl.component";
     private static final String LWJGL_COMPONENT_FALLBACK = "lwjgl3.4.2";
+    private static final String LWJGL_COMPONENT_VULKAN = "lwjglVulkan";
 
     /**
      * Returns true for newer Minecraft version ids that should prefer the newer LWJGL bundle.
@@ -111,8 +112,6 @@ public final class Tools {
 
         String v = versionToken.trim().toLowerCase(Locale.ROOT);
 
-        // Snapshot-style versions such as:
-        // 24w09a, 25w14a, 26w14a, 27w03b
         java.util.regex.Matcher snapshotMatcher = java.util.regex.Pattern
                 .compile("^(\\d{2})w\\d{2}[a-z](?:[-_].*)?$")
                 .matcher(v);
@@ -122,8 +121,6 @@ public final class Tools {
             return yearPrefix >= 26;
         }
 
-        // Release-style versions such as:
-        // 26.1, 26.2, 26.10, 27.1, 27.1.2
         java.util.regex.Matcher releaseMatcher = java.util.regex.Pattern
                 .compile("^(\\d{2})\\.(\\d+)(?:\\.\\d+)?(?:[-_].*)?$")
                 .matcher(v);
@@ -132,6 +129,36 @@ public final class Tools {
             int yearPrefix = Integer.parseInt(releaseMatcher.group(1));
             return yearPrefix >= 26;
         }
+
+        return false;
+    }
+
+    private static boolean shouldUseVulkanLWJGLComponent(String versionToken) {
+        if (!isValidString(versionToken)) return false;
+
+        String v = versionToken.trim().toLowerCase(Locale.ROOT);
+
+        java.util.regex.Matcher snapshotMatcher = java.util.regex.Pattern
+                .compile("^(\\d{2})\\.(\\d+)(?:\\.\\d+)?(?:[-_].*)?$")
+                .matcher(v);
+        if (snapshotMatcher.matches()) {
+            int major = Integer.parseInt(snapshotMatcher.group(1));
+            int minor = Integer.parseInt(snapshotMatcher.group(2));
+            return major > 26 || (major == 26 && minor >= 2);
+        }
+
+        java.util.regex.Matcher yearWeekMatcher = java.util.regex.Pattern
+                .compile("^(\\d{2})w(\\d{2})[a-z](?:[-_].*)?$")
+                .matcher(v);
+        if (yearWeekMatcher.matches()) {
+            int yearPrefix = Integer.parseInt(yearWeekMatcher.group(1));
+            return yearPrefix >= 26;
+        }
+
+        if (v.contains("26.2")) return true;
+        if (v.contains("26.3")) return true;
+        if (v.contains("27.")) return true;
+        if (v.contains("28.")) return true;
 
         return false;
     }
@@ -272,6 +299,17 @@ public final class Tools {
             );
         }
 
+        String versionToken = getVersionToken(minecraftVersion, versionInfo);
+
+        if (shouldUseVulkanLWJGLComponent(versionToken)
+                && hasLWJGLComponent(LWJGL_COMPONENT_VULKAN)) {
+            Logging.i(
+                    InfoDistributor.LAUNCHER_NAME,
+                    "LWJGL auto-select: version=" + versionToken + ", component=" + LWJGL_COMPONENT_VULKAN
+            );
+            return LWJGL_COMPONENT_VULKAN;
+        }
+
         if (shouldUseModernLWJGL(minecraftVersion, versionInfo)
                 && hasLWJGLComponent(LWJGL_COMPONENT_FALLBACK)) {
             return LWJGL_COMPONENT_FALLBACK;
@@ -279,6 +317,7 @@ public final class Tools {
 
         if (hasLWJGLComponent(DEFAULT_LWJGL_COMPONENT)) return DEFAULT_LWJGL_COMPONENT;
         if (hasLWJGLComponent(LWJGL_COMPONENT_FALLBACK)) return LWJGL_COMPONENT_FALLBACK;
+        if (hasLWJGLComponent(LWJGL_COMPONENT_VULKAN)) return LWJGL_COMPONENT_VULKAN;
 
         return DEFAULT_LWJGL_COMPONENT;
     }
@@ -319,15 +358,27 @@ public final class Tools {
         File lwjglFolder = getLWJGLComponentDir(componentName);
         File[] lwjglFiles = lwjglFolder.listFiles();
 
+        Logging.i(InfoDistributor.LAUNCHER_NAME,
+                "LWJGL classpath scan component=" + componentName + ", dir=" + lwjglFolder.getAbsolutePath());
+
         if (lwjglFiles != null) {
             Arrays.sort(lwjglFiles, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
             for (File file : lwjglFiles) {
+                Logging.i(InfoDistributor.LAUNCHER_NAME,
+                        "LWJGL scan entry: " + file.getAbsolutePath() + " exists=" + file.exists());
+
                 if (file.getName().endsWith(".jar")) {
                     if (libStr.length() > 0) libStr.append(":");
                     libStr.append(file.getAbsolutePath());
                 }
             }
+        } else {
+            Logging.w(InfoDistributor.LAUNCHER_NAME,
+                    "LWJGL classpath scan: listFiles() returned null for " + lwjglFolder.getAbsolutePath());
         }
+
+        Logging.i(InfoDistributor.LAUNCHER_NAME,
+                "LWJGL classpath result=" + libStr);
 
         return libStr.toString();
     }
@@ -353,6 +404,10 @@ public final class Tools {
 
     public static String getLWJGL342ClassPath() {
         return getLWJGLClassPath("lwjgl3.4.2");
+    }
+
+    public static String getLWJGLVulkanClassPath() {
+        return getLWJGLClassPath(LWJGL_COMPONENT_VULKAN);
     }
 
     public static String generateLaunchClassPath(JMinecraftVersionList.Version info, Version minecraftVersion) {

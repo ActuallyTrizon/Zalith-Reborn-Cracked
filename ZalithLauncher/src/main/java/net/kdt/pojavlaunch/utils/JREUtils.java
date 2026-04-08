@@ -105,6 +105,10 @@ public final class JREUtils {
     public static void initJavaRuntime(String jreHome) {
         //dlopen("libSDL3.so");
         //dlopen("libSDL2.so");
+
+        dlopen(DIR_NATIVE_LIB + "/libspirv-cross.so");
+        dlopen(DIR_NATIVE_LIB + "/libshaderc.so");
+        dlopen(DIR_NATIVE_LIB + "/liblwjgl_vma.so");
         dlopen("libzstd-jni_dh-1.5.7-6.so");
         dlopen(findInLdLibPath("libjli.so"));
         if (!dlopen("libjvm.so")) {
@@ -491,11 +495,10 @@ public final class JREUtils {
                 "-Dpojav.path.private.account=" + PathManager.DIR_ACCOUNT_NEW,
                 "-Duser.timezone=" + TimeZone.getDefault().getID(),
 
-                "-Dorg.lwjgl.vulkan.libname=libvulkan.so",
-                //LWJGL 3 DEBUG FLAGS
-                //"-Dorg.lwjgl.util.Debug=true",
-                //"-Dorg.lwjgl.util.DebugFunctions=true",
-                //"-Dorg.lwjgl.util.DebugLoader=true",
+                //Debugging Vulkan
+                /*"-Dorg.lwjgl.vulkan.libname=libvulkan.so",
+                "-Dorg.lwjgl.util.Debug=true",
+                "-Dorg.lwjgl.util.DebugLoader=true",*/
                 // GLFW Stub width height
                 "-Dglfwstub.windowWidth=" + Tools.getDisplayFriendlyRes(currentDisplayMetrics.widthPixels, AllSettings.getResolutionRatio().getValue() / 100F),
                 "-Dglfwstub.windowHeight=" + Tools.getDisplayFriendlyRes(currentDisplayMetrics.heightPixels, AllSettings.getResolutionRatio().getValue() / 100F),
